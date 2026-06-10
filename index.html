@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agro Forte, Futuro Sustentável - Agrinho</title>
+    <style>
+        :root {
+            --bg-sky: #90caf9; 
+            --bg-ground: #d2b48c; 
+            --transition-speed: 2s;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Container do Jogo */
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 560px;
+            background: linear-gradient(to bottom, var(--bg-sky) 55%, var(--bg-ground) 55%);
+            border: 6px solid #4e342e;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+            transition: background var(--transition-speed) ease;
+        }
+
+        /* Cenário Expandido */
+        .camada-cenario {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            user-select: none;
+        }
+        
+        .nuvem { position: absolute; top: 30px; font-size: 35px; opacity: 0.7; animation: moverNuvem 25s linear infinite; }
+        #nuvem1 { left: -50px; animation-delay: 0s; }
+        #nuvem2 { left: -150px; top: 70px; animation-delay: 10s; }
+        
+        .montanhas { position: absolute; bottom: 45%; left: 0; width: 100%; font-size: 50px; color: #8d6e63; opacity: 0.5; line-height: 0; }
+        .arvores { position: absolute; bottom: 45%; right: 20px; font-size: 40px; }
+        .plantacao-fundo { position: absolute; bottom: 100px; left: 10px; font-size: 28px; opacity: 0.6; }
+        .cerca { position: absolute; bottom: 75px; left: 0; width: 100%; font-size: 24px; letter-spacing: 4px; color: #5d4037; opacity: 0.7; }
+
+        @keyframes moverNuvem {
+            0% { left: -100px; }
+            100% { left: 850px; }
+        }
+
+        /* Evolução Sustentável */
+        .ambiente-sustentavel {
+            --bg-sky: #64b5f6 !important;
+            --bg-ground: #66bb6a !important; 
+        }
+        .flores-campo {
+            position: absolute;
+            width: 100%;
+            bottom: 10px;
+            font-size: 20px;
+            letter-spacing: 25px;
+            padding-left: 20px;
+            opacity: 0;
+            transition: opacity var(--transition-speed);
+        }
+        .ambiente-sustentavel .flores-campo { opacity: 0.9; }
+
+        /* Painel de Pontos (UI) */
+        #ui-layer {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 10;
+            color: #fff;
+            font-weight: bold;
+            font-size: 16px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 18px;
+            border-radius: 20px;
+            border: 2px solid #8d6e63;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        /* Personagem */
+        #personagem {
+            position: absolute;
+            bottom: 15px;
+            left: 365px;
+            width: 75px;
+            height: 75px;
+            font-size: 60px;
+            text-align: center;
+            line-height: 75px;
+            z-index: 5;
+            filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.3));
+        }
+
+        /* Itens Caindo */
+        .item {
+            position: absolute;
+            font-size: 38px;
+            z-index: 4;
+            filter: drop-shadow(2px 3px 2px rgba(0,0,0,0.2));
+        }
+
+        /* Overlays / Telas de Menu */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(22, 28, 22, 0.97);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            z-index: 20;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        h1 { font-size: 32px; color: #a5d6a7; margin: 0 0 10px 0; text-shadow: 2px 2px #000; }
+        p { font-size: 15px; color: #e0e0e0; margin: 0 0 20px 0; max-width: 600px; line-height: 1.4; }
+
+        input {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 2px solid #4caf50;
+            margin-bottom: 20px;
+            width: 260px;
+            text-align: center;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            box-shadow: 0 4px 0px #2e7d32;
+        }
+        button:active { transform: translateY(2px); box-shadow: 0 2px 0px #2e7d32; }
+
+        /* Grade dos Novos 4 Personagens */
+        .grid-personagens { display: flex; gap: 12px; margin-bottom: 20px; }
+        .card-char {
+            background: #252a25;
+            border: 3px solid #444;
+            border-radius: 12px;
+            padding: 10px;
+            width: 125px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .card-char.selected { border-color: #4caf50; background: #1b5e20; transform: scale(1.05); }
+        .card-char .avatar { font-size: 45px; }
+        .card-char .nome-tipo { font-size: 13px; font-weight: bold; margin-top: 3px; color: #a5d6a7; }
+
+        /* Caixa de Opções do Quiz Reestruturado */
+        .quiz-container-opcoes {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 80%;
+            max-width: 550px;
+            margin-top: 15px;
+        }
+        .btn-opcao {
+            background: #333a33;
+            border: 2px solid #555;
+            color: white;
+            padding: 12px 20px;
+            font-size: 14px;
+            text-align: left;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            box-shadow: none;
+        }
+        .btn-opcao:hover { border-color: #81c784; background: #3d463d; }
+        
+        /* Classes de validação instantânea */
+        .btn-opcao.certo { background: #2e7d32 !important; border-color: #4caf50 !important; font-weight: bold; }
+        .btn-opcao.errado { background: #c62828 !important; border-color: #e53935 !important; opacity: 0.8; }
+
+        /* Estilo do Certificado */
+        #certificado {
+            background: #fffdf5;
+            color: #2e3d30;
+            padding: 25px;
+            border: 10px double #2e7d32;
+            border-radius: 4px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.4);
+            max-width: 85%;
+        }
+        #certificado h2 { font-family: 'Times New Roman', Georgia, serif; font-size: 32px; color: #1b5e20; margin: 0 0 5px 0; }
+        #certificado .nome-player { font-size: 24px; font-weight: bold; color: #3e2723; text-decoration: underline; margin: 10px 0; }
+
+        /* Quadro de Sugestões */
+        .painel-sugestoes {
+            background: #2e3d30;
+            border: 2px solid #81c784;
+            border-radius: 10px;
+            padding: 15px;
+            max-width: 90%;
+            text-align: left;
+            margin-bottom: 15px;
+        }
+        .painel-sugestoes h3 { margin: 0 0 10px 0; color: #a5d6a7; text-align: center; font-size: 18px; }
+        .item-sugestao { margin-bottom: 8px; font-size: 13px; display: flex; align-items: flex-start; }
+        .item-sugestao span { margin-right: 8px; font-size: 16px; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div class="camada-cenario">
+        <div id="nuvem1" class="nuvem">☁️</div>
+        <div id="nuvem2" class="nuvem">☁️</div>
+        <div class="montanhas">⛰️⛰️⛰️⛰️⛰️⛰️</div>
+        <div class="arvores">🌳🌲🌳</div>
+        <div class="plantacao-fundo">🌽🌱🌽🌱</div>
+        <div class="cerca">====🪵====🪵====🪵====🪵====🪵====</div>
+        <div class="flores-campo">🌸🌻🌷🌼🌸🌻🌷🌼</div>
+    </div>
+
+    <div id="ui-layer">
+        <div>Produtor(a): <span id="display-nome">---</span></div>
+        <div>Sustentabilidade: <span id="score">0</span> / 200 pts</div>
+    </div>
+
+    <div id="personagem">👨‍🌾</div>
+
+    <div id="tela-inicio" class="overlay">
+        <h1>Agro Forte, Futuro Sustentável</h1>
+        <p>Desenvolva o campo seco coletando os alimentos corretos. Utilize ferramentas da Agricultura 4.0 para proteger o ecossistema e prosperar!</p>
+        
+        <input type="text" id="nome-jogador" placeholder="Seu nome ou da Escola..." maxlength="20" />
+        
+        <div style="font-weight: bold; margin-bottom: 10px; color: #a5d6a7; font-size: 14px;">ESCOLHA SEU PERSONAGEM:</div>
+        <div class="grid-personagens">
+            <div class="card-char selected" onclick="selecionarChar(this, '👨‍🌾')">
+                <div class="avatar">👨‍🌾</div>
+                <div class="nome-tipo">Fazendeiro</div>
+            </div>
+            <div class="card-char" onclick="selecionarChar(this, '🤖')">
+                <div class="avatar">🤖</div>
+                <div class="nome-tipo">Robô</div>
+            </div>
+            <div class="card-char" onclick="selecionarChar(this, '🚜')">
+                <div class="avatar">🚜</div>
+                <div class="nome-tipo">Colheitadeira</div>
+            </div>
+            <div class="card-char" onclick="selecionarChar(this, '🐝')">
+                <div class="avatar">🐝</div>
+                <div class="nome-tipo">Abelha</div>
+            </div>
+        </div>
+
+        <button onclick="iniciarJogo()">Iniciar Missão</button>
+    </div>
+
+    <div id="tela-quiz" class="overlay hidden">
+        <h2>🌱 Validação de Conhecimento Técnico</h2>
+        <p id="enunciado-quiz" style="font-size:17px; font-weight:bold; color:#fff; margin:15px 0;"></p>
+        <div id="alternativas-container" class="quiz-container-opcoes"></div>
+        <button id="btn-avancar-quiz" onclick="proximaQuestao()" style="margin-top:20px; display:none;">Avançar</button>
+    </div>
+
+    <div id="tela-final" class="overlay hidden">
+        <div id="certificado">
+            <h2>CERTIFICADO AMBIENTAL</h2>
+            <p>Certificamos para fins de incentivo à sustentabilidade que</p>
+            <div id="cert-nome" class="nome-player"></div>
+            <p>gerenciou a propriedade agrícola com equilíbrio perfeito entre produção e meio ambiente, somando <strong><span id="cert-score"></span> pontos</strong>.</p>
+            <p style="font-size: 11px; margin-top: 15px; font-weight: bold; color: #5d4037;">🏆 Projeto Agrinho - Paraná</p>
+        </div>
+        <button onclick="avancarParaSugesoes()" style="margin-top: 20px;">Ver Guia Prático do Agro</button>
+    </div>
+
+    <div id="tela-sugestoes" class="overlay hidden">
+        <h1>💡 Práticas para o Futuro Sustentável</h1>
+        <p>Leve este aprendizado para a vida real! Aqui estão as principais sugestões do Agrinho para manter o campo forte:</p>
+        
+        <div class="painel-sugestoes">
+            <h3>Guia de Ação de Pequenos Produtores</h3>
+            <div class="item-sugestao">
+                <span>🛰️</span>
+                <div><strong>Agricultura de Precisão:</strong> Use sensores e aplicativos para medir a umidade exata do solo, evitando desperdício de água e adubo.</div>
+            </div>
+            <div class="item-sugestao">
+                <span>🔄</span>
+                <div><strong>Rotação de Culturas:</strong> Alterne as espécies plantadas na mesma área para manter o solo naturalmente fértil e quebrar o ciclo de pragas.</div>
+            </div>
+            <div class="item-sugestao">
+                <span>💧</span>
+                <div><strong>Manejo de Recursos Hídricos:</strong> Proteja as matas ciliares e as nascentes da sua propriedade. Sem água limpa, não há futuro para o agro.</div>
+            </div>
+            <div class="item-sugestao">
+                <span>🐝</span>
+                <div><strong>Preservação de Polinizadores:</strong> Evite defensivos químicos agressivos. As abelhas e insetos locais aumentam a produtividade da lavoura em até 30%!</div>
+            </div>
+        </div>
+
+        <button onclick="window.location.reload()">Jogar Novamente</button>
+    </div>
+</div>
+
+<script>
+    const container = document.getElementById('game-container');
+    const personagem = document.getElementById('personagem');
+    const scoreElement = document.getElementById('score');
+    
+    let score = 0;
+    let gameActive = false;
+    let playerPos = 365;
+    let powerUpAtivo = false;
+    
+    let nomeJogador = "";
+    let charEscolhido = "👨‍🌾";
+    let audioCtx;
+    let questaoAtualIndex = 0;
+    let bloqueiaCliqueAlternativa = false;
+    
+    function iniciarAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function som(freq, tipo, dur, vol) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = tipo;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        g.gain.setValueAtTime(vol, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+        osc.connect(g);
+        g.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + dur);
+    }
+
+    function musicaFundo() {
+        if (!gameActive) return;
+        const notas = score >= 100 ? [392.00, 440.00, 493.88, 523.25] : [261.63, 293.66, 329.63, 392.00];
+        let n = notas[Math.floor(Math.random() * notas.length)];
+        som(n, 'triangle', 0.5, 0.02);
+        setTimeout(musicaFundo, 750);
+    }
+
+    function selecionarChar(elemento, emoji) {
+        document.querySelectorAll('.card-char').forEach(card => card.classList.remove('selected'));
+        elemento.classList.add('selected');
+        charEscolhido = emoji;
+        personagem.innerText = emoji;
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (!gameActive) return;
+        if (e.key === 'ArrowLeft' && playerPos > 20) playerPos -= 40;
+        if (e.key === 'ArrowRight' && playerPos < 710) playerPos += 40;
+        personagem.style.left = playerPos + 'px';
+    });
+
+    function iniciarJogo() {
+        iniciarAudio();
+        nomeJogador = document.getElementById('nome-jogador').value.trim() || "Pequeno Produtor";
+        document.getElementById('display-nome').innerText = nomeJogador;
+        document.getElementById('tela-inicio').classList.add('hidden');
+        
+        gameActive = true;
+        musicaFundo();
+        spawnItens();
+    }
+
+    function spawnItens() {
+        if (!gameActive) return;
+
+        const item = document.createElement('div');
+        item.className = 'item';
+        const rand = Math.random();
+        
+        if (rand > 0.45) {
+            item.innerText = "🌽"; 
+            item.dataset.tipo = "bom";
+        } else if (rand > 0.15) {
+            item.innerText = "⚠️"; 
+            item.dataset.tipo = "ruim";
+        } else {
+            item.innerText = "🛰️"; 
+            item.dataset.tipo = "raro";
+        }
+
+        item.style.left = Math.random() * 700 + 30 + 'px';
+        item.style.top = '0px';
+        container.appendChild(item);
+
+        let cair = setInterval(() => {
+            if (!gameActive) { clearInterval(cair); item.remove(); return; }
+            let top = parseInt(item.style.top);
+            item.style.top = (top + 4) + 'px';
+
+            if (top > 440 && top < 495) {
+                let itemLeft = parseInt(item.style.left);
+                if (itemLeft > playerPos - 45 && itemLeft < playerPos + 45) {
+                    coletar(item.dataset.tipo);
+                    clearInterval(cair);
+                    item.remove();
+                }
+            }
+            if (top > 560) { clearInterval(cair); item.remove(); }
+        }, 22);
+
+        setTimeout(spawnItens, Math.max(350, 900 - (score * 2.5)));
+    }
+
+    function coletar(tipo) {
+        if (tipo === "bom") {
+            score += powerUpAtivo ? 20 : 10;
+            som(523.25, 'sine', 0.15, 0.12);
+        } else if (tipo === "ruim") {
+            if (!powerUpAtivo) {
+                score = Math.max(0, score - 15);
+                som(120.00, 'sawtooth', 0.35, 0.15);
+            }
+        } else if (tipo === "raro") {
+            ativarTecnologia();
+            som(880.00, 'square', 0.5, 0.05);
+        }
+
+        scoreElement.innerText = score;
+
+        if (score >= 100) {
+            container.classList.add('ambiente-sustentavel');
+            if(container.dataset.msg !== "true") {
+                alert("Sua gestão sustentável está recuperando o ecossistema!");
+                container.dataset.msg = "true";
+            }
+        }
+
+        if (score >= 200) finalizarJogo();
+    }
+
+    function ativarTecnologia() {
+        powerUpAtivo = true;
+        const backup = charEscolhido;
+        personagem.innerText = "📱";
+        setTimeout(() => {
+            powerUpAtivo = false;
+            personagem.innerText = backup;
+        }, 5000);
+    }
+
+    function finalizarJogo() {
+        gameActive = false;
+        document.getElementById('tela-quiz').classList.remove('hidden');
+        questaoAtualIndex = 0;
+        gerarQuiz();
+    }
+
+    // BANCO DE QUESTÕES ATUALIZADO COM 3 ALTERNATIVAS CADA
+    const questoes = [
+        { 
+            q: "Qual o equilíbrio central procurado pelo lema do Agrinho (Agro Forte, Futuro Sustentável)?", 
+            opcoes: [
+                "Aumentar a produção ignorando os impactos no ecossistema.",
+                "Produzir alimentos de alta qualidade em harmonia com a preservação ambiental.",
+                "Abandonar a tecnologia mecânica para usar apenas ferramentas manuais."
+            ],
+            correta: 1
+        },
+        { 
+            q: "De que maneira as novas tecnologias 4.0 (como satélites e sensores) auxiliam o produtor?", 
+            opcoes: [
+                "Elas monitoram o campo para aplicar recursos na quantidade ideal, eliminando desperdícios.",
+                "Substituem totalmente o trabalho humano, esgotando os nutrientes da terra mais rápido.",
+                "Servem apenas para deixar o custo de produção mais caro sem trazer benefícios práticos."
+            ],
+            correta: 0
+        }
+    ];
+
+    function gerarQuiz() {
+        bloqueiaCliqueAlternativa = false;
+        document.getElementById('btn-avancar-quiz').style.display = 'none';
+        
+        const enunciado = document.getElementById('enunciado-quiz');
+        const containerAlternativas = document.getElementById('alternativas-container');
+        
+        const dadosQuestao = questoes[questaoAtualIndex];
+        enunciado.innerText = dadosQuestao.q;
+        containerAlternativas.innerHTML = "";
+
+        dadosQuestao.opcoes.forEach((textoOpcao, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-opcao';
+            btn.innerText = `${String.fromCharCode(65 + index)}) ${textoOpcao}`;
+            btn.onclick = () => verificarRespostaQuiz(btn, index);
+            containerAlternativas.appendChild(btn);
+        });
+    }
+
+    function verificarRespostaQuiz(elementoClicado, indexSelecionado) {
+        if (bloqueiaCliqueAlternativa) return; 
+        bloqueiaCliqueAlternativa = true;
+
+        const dadosQuestao = questoes[questaoAtualIndex];
+        const todosBotoes = document.querySelectorAll('.btn-opcao');
+
+        if (indexSelecionado === dadosQuestao.correta) {
+            elementoClicado.classList.add('certo');
+            som(523.25, 'sine', 0.2, 0.15); // Som de acerto alegre
+        } else {
+            elementoClicado.classList.add('errado');
+            todosBotoes[dadosQuestao.correta].classList.add('certo'); // Destaca a correta automaticamente
+            som(120.00, 'sawtooth', 0.4, 0.15); // Som de erro grave
+        }
+
+        document.getElementById('btn-avancar-quiz').style.display = 'inline-block';
+    }
+
+    function proximaQuestao() {
+        questaoAtualIndex++;
+        if (questaoAtualIndex < questoes.length) {
+            gerarQuiz();
+        } else {
+            exibirCertificado();
+        }
+    }
+
+    function exibirCertificado() {
+        document.getElementById('tela-quiz').classList.add('hidden');
+        document.getElementById('tela-final').classList.remove('hidden');
+        document.getElementById('cert-nome').innerText = nomeJogador;
+        document.getElementById('cert-score').innerText = score;
+        som(587.33, 'sine', 0.8, 0.15);
+    }
+
+    function avancarParaSugesoes() {
+        som(440, 'sine', 0.1, 0.1);
+        document.getElementById('tela-final').classList.add('hidden');
+        document.getElementById('tela-sugestoes').classList.remove('hidden');
+    }
+</script>
+
+</body>
+</html>
